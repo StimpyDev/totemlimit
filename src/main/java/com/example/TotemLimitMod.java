@@ -13,9 +13,9 @@ public class TotemLimitMod implements ModInitializer {
     @Override
     public void onInitialize() {
         // This cleans up the cooldown map when a player leaves to prevent memory leaks
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            TotemLimitMixin.removePlayerData(handler.player.getUuid());
-        });
+    ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+        TotemManager.removePlayerData(handler.player.getUuid());
+    });
 
         LOGGER.info("Totem Limit Mod initialized! Players can only carry 2 totems.");
     }
