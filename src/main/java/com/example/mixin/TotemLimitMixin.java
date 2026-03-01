@@ -24,7 +24,11 @@ public class TotemLimitMixin {
     private void onInsert(ItemStack stack, CallbackInfoReturnable<Boolean> ci) {
         PlayerInventory inventory = (PlayerInventory) (Object) this;
         
-        if (inventory.player != null && (inventory.player.isCreative() || inventory.player.isSpectator())) return;
+        // Check if player exists and if we are on server side
+        if (inventory.player == null || inventory.player.getEntityWorld().isClient()) return;
+        
+        // Creative/Spectator bypass
+        if (inventory.player.isCreative() || inventory.player.isSpectator()) return;
 
         if (!stack.isEmpty() && stack.isOf(Items.TOTEM_OF_UNDYING)) {
             if (inventory.count(Items.TOTEM_OF_UNDYING) >= TOTEM_LIMIT) {
@@ -38,7 +42,10 @@ public class TotemLimitMixin {
     private void onUpdateItems(CallbackInfo ci) {
         PlayerInventory inventory = (PlayerInventory) (Object) this;
 
-        if (inventory.player == null || inventory.player.world.isClient) return;
+        // Ensure we are on the server and player is valid
+        if (inventory.player == null || inventory.player.getEntityWorld().isClient()) return;
+        
+        // Creative/Spectator bypass
         if (inventory.player.isCreative() || inventory.player.isSpectator()) return;
 
         int totalTotems = inventory.count(Items.TOTEM_OF_UNDYING);
@@ -46,6 +53,7 @@ public class TotemLimitMixin {
         if (totalTotems > TOTEM_LIMIT) {
             int toRemove = totalTotems - TOTEM_LIMIT;
             
+            // Loop backwards to safely remove items from the inventory
             for (int i = inventory.size() - 1; i >= 0 && toRemove > 0; i--) {
                 ItemStack stack = inventory.getStack(i);
                 if (stack.isOf(Items.TOTEM_OF_UNDYING)) {
@@ -60,6 +68,7 @@ public class TotemLimitMixin {
     private void dropExcessTotem(PlayerInventory inventory, ItemStack stack) {
         if (inventory.player == null || stack.isEmpty()) return;
 
+        // Message logic with cooldown to prevent chat spam
         if (!TotemManager.isMessageOnCooldown(inventory.player.getUuid(), MESSAGE_COOLDOWN_MS)) {
             inventory.player.sendMessage(Text.literal("§c§lTotemlimiet bereikt van " + TOTEM_LIMIT), false);
         }
@@ -69,6 +78,3 @@ public class TotemLimitMixin {
         inventory.player.dropItem(copy, false, false); 
     }
 }
-
-
-
