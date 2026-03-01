@@ -1,4 +1,4 @@
-\package com.example.mixin;
+package com.example.mixin;
 
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -74,3 +74,4 @@ public class TotemLimitMixin {
         stack.setCount(0);
     }
 }
+
