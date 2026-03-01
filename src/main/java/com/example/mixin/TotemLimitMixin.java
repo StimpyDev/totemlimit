@@ -38,7 +38,7 @@ public class TotemLimitMixin {
     private void onUpdateItems(CallbackInfo ci) {
         PlayerInventory inventory = (PlayerInventory) (Object) this;
 
-        if (inventory.player == null || inventory.player.getWorld().isClient) return;
+        if (inventory.player == null || inventory.player.getWorld().isClient()) return;
         if (inventory.player.isCreative() || inventory.player.isSpectator()) return;
 
         int totalTotems = inventory.count(Items.TOTEM_OF_UNDYING);
@@ -69,3 +69,4 @@ public class TotemLimitMixin {
         inventory.player.dropItem(copy, false, false); 
     }
 }
+
