@@ -18,7 +18,7 @@ public class TotemLimitMixin {
     @Unique
     private static final long MESSAGE_COOLDOWN_MS = 5000;
     @Unique
-    private static final int TOTEM_LIMIT = 2;
+    private static final int TOTEM_LIMIT = 3;
 
     @Inject(method = "insertStack(Lnet/minecraft/item/ItemStack;)Z", at = @At("HEAD"), cancellable = true)
     private void onInsert(ItemStack stack, CallbackInfoReturnable<Boolean> ci) {
