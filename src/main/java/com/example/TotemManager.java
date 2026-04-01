@@ -10,11 +10,12 @@ public class TotemManager {
     public static void removePlayerData(UUID uuid) {
         lastMessageTime.remove(uuid);
     }
-
+    
     public static boolean isMessageOnCooldown(UUID uuid, long cooldownMs) {
         long now = System.currentTimeMillis();
         long lastTime = lastMessageTime.getOrDefault(uuid, 0L);
-        if (now - lastTime > cooldownMs) {
+        
+        if (now - lastTime >= cooldownMs) {
             lastMessageTime.put(uuid, now);
             return false;
         }
