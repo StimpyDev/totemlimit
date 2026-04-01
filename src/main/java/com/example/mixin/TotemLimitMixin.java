@@ -19,20 +19,22 @@ public class TotemLimitMixin {
     private static final long MESSAGE_COOLDOWN_MS = 5000;
     @Unique
     private static final int TOTEM_LIMIT = 3;
+    @Unique
+    private static final int CRYSTAL_LIMIT = 32;
 
     @Inject(method = "insertStack(Lnet/minecraft/item/ItemStack;)Z", at = @At("HEAD"), cancellable = true)
     private void onInsert(ItemStack stack, CallbackInfoReturnable<Boolean> ci) {
         PlayerInventory inventory = (PlayerInventory) (Object) this;
         
-        // Check if player exists and if we are on server side
         if (inventory.player == null || inventory.player.getEntityWorld().isClient()) return;
-        
-        // Creative/Spectator bypass
         if (inventory.player.isCreative() || inventory.player.isSpectator()) return;
 
-        if (!stack.isEmpty() && stack.isOf(Items.TOTEM_OF_UNDYING)) {
-            if (inventory.count(Items.TOTEM_OF_UNDYING) >= TOTEM_LIMIT) {
-                dropExcessTotem(inventory, stack);
+        if (!stack.isEmpty()) {
+            if (stack.isOf(Items.TOTEM_OF_UNDYING) && inventory.count(Items.TOTEM_OF_UNDYING) >= TOTEM_LIMIT) {
+                dropExcessItem(inventory, stack, "Totem", TOTEM_LIMIT);
+                ci.setReturnValue(false);
+            } else if (stack.isOf(Items.END_CRYSTAL) && inventory.count(Items.END_CRYSTAL) >= CRYSTAL_LIMIT) {
+                dropExcessItem(inventory, stack, "End Crystal", CRYSTAL_LIMIT);
                 ci.setReturnValue(false);
             }
         }
@@ -42,35 +44,41 @@ public class TotemLimitMixin {
     private void onUpdateItems(CallbackInfo ci) {
         PlayerInventory inventory = (PlayerInventory) (Object) this;
 
-        // Ensure we are on the server and player is valid
         if (inventory.player == null || inventory.player.getEntityWorld().isClient()) return;
-        
-        // Creative/Spectator bypass
         if (inventory.player.isCreative() || inventory.player.isSpectator()) return;
 
-        int totalTotems = inventory.count(Items.TOTEM_OF_UNDYING);
-        
-        if (totalTotems > TOTEM_LIMIT) {
-            int toRemove = totalTotems - TOTEM_LIMIT;
-            
-            // Loop backwards to safely remove items from the inventory
+        checkAndDrop(inventory, Items.TOTEM_OF_UNDYING, TOTEM_LIMIT, "Totem");
+        checkAndDrop(inventory, Items.END_CRYSTAL, CRYSTAL_LIMIT, "End Crystal");
+    }
+
+    @Unique
+    private void checkAndDrop(PlayerInventory inventory, net.minecraft.item.Item item, int limit, String name) {
+        int total = inventory.count(item);
+        if (total > limit) {
+            int toRemove = total - limit;
             for (int i = inventory.size() - 1; i >= 0 && toRemove > 0; i--) {
                 ItemStack stack = inventory.getStack(i);
-                if (stack.isOf(Items.TOTEM_OF_UNDYING)) {
-                    dropExcessTotem(inventory, stack);
-                    toRemove--;
+                if (stack.isOf(item)) {
+                    int countInStack = stack.getCount();
+                    if (countInStack <= toRemove) {
+                        dropExcessItem(inventory, stack, name, limit);
+                        toRemove -= countInStack;
+                    } else {
+                        ItemStack dropCopy = stack.split(toRemove);
+                        dropExcessItem(inventory, dropCopy, name, limit);
+                        toRemove = 0;
+                    }
                 }
             }
         }
     }
 
     @Unique
-    private void dropExcessTotem(PlayerInventory inventory, ItemStack stack) {
+    private void dropExcessItem(PlayerInventory inventory, ItemStack stack, String itemName, int limit) {
         if (inventory.player == null || stack.isEmpty()) return;
 
-        // Message logic with cooldown to prevent chat spam
         if (!TotemManager.isMessageOnCooldown(inventory.player.getUuid(), MESSAGE_COOLDOWN_MS)) {
-            inventory.player.sendMessage(Text.literal("§c§lTotemlimiet bereikt van " + TOTEM_LIMIT), false);
+            inventory.player.sendMessage(Text.literal("§d§l" + itemName + " limiet bereikt van " + limit), false);
         }
         
         ItemStack copy = stack.copy();
