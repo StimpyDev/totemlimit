@@ -1,6 +1,5 @@
 package com.example;
 
-import com.example.mixin.TotemLimitMixin;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import org.slf4j.Logger;
@@ -12,11 +11,12 @@ public class TotemLimitMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // This cleans up the cooldown map when a player leaves to prevent memory leaks
-    ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-        TotemManager.removePlayerData(handler.player.getUuid());
-    });
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            if (handler.player != null) {
+                TotemManager.removePlayerData(handler.player.getUuid());
+            }
+        });
 
-        LOGGER.info("Totem Limit Mod initialized! Players can only carry 2 totems.");
+        LOGGER.info("Totem Limit Mod loaded.");
     }
 }
